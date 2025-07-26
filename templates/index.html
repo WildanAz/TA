@@ -97,7 +97,7 @@
     {% if conf_warna < 60 %} {% set _ = fitur_rendah.append('warna (' ~ conf_warna ~ '%)') %} {% endif %}
     {% if conf_tekstur < 60 %} {% set _ = fitur_rendah.append('tekstur (' ~ conf_tekstur ~ '%)') %} {% endif %}
     {% if conf_lokasi < 60 %} {% set _ = fitur_rendah.append('lokasi (' ~ conf_lokasi ~ '%)') %} {% endif %}
-    {% if conf_luka < 60 %} {% set _ = fitur_rendah.append('luka (' ~ conf_luka ~ '%)') %} {% endif %}
+
 
     {% if fitur_rendah|length == 0 %}
         <div class="result-container">

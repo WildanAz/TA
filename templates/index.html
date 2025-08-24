@@ -2,25 +2,32 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediksi Penyakit Sapi</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
             background-color: #f7f9fc;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
         .container {
-            max-width: 800px;
-            margin: 40px auto;
+            width: 100%;
+            max-width: 700px;
+            margin: 20px;
             background: #ffffff;
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            text-align: center;
         }
         h1 {
-            text-align: center;
-            color: #007BFF;
+            color: #0056b3;
+            margin-bottom: 25px;
         }
         .file-label {
             display: inline-block;
@@ -30,15 +37,18 @@
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            margin: 20px auto;
+            transition: background-color 0.3s;
+        }
+        .file-label:hover {
+            background-color: #0056b3;
         }
         input[type="file"] {
             display: none;
         }
         button {
             display: block;
-            margin: 20px auto;
-            padding: 12px 25px;
+            margin: 25px auto;
+            padding: 12px 30px;
             background-color: #28a745;
             color: white;
             border: none;
@@ -46,6 +56,17 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
+            transition: background-color 0.3s, opacity 0.3s;
+            min-width: 200px;
+            min-height: 48px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        button:disabled {
+            background-color: #218838;
+            opacity: 0.7;
+            cursor: not-allowed;
         }
         .box {
             background-color: #f1f5fb;
@@ -53,7 +74,7 @@
             padding: 15px 20px;
             border-radius: 8px;
             margin-top: 25px;
-            
+            text-align: left;
         }
         .preview {
             display: block;
@@ -61,63 +82,81 @@
             max-width: 100%;
             max-height: 300px;
             border-radius: 10px;
-            border: 2px solid #007BFF;
+            border: 2px solid #ddd;
+        }
+        .error-box {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+            color: #721c24;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            text-align: left;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .button-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <h1>🐄 Aplikasi Prediksi Penyakit Sapi</h1>
-    <center>
-    <form method="post" enctype="multipart/form-data">
-        <label class="file-label" for="imageInput">📷 Pilih Gambar Luka</label>
-        <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)">
+    <h1>Aplikasi Prediksi Penyakit Sapi</h1>
+    
+    <form id="prediction-form" method="post" enctype="multipart/form-data">
+        <label class="file-label" for="imageInput">📷 Pilih Gambar</label>
+        <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)" required>
+        
         <img id="preview" class="preview"
              style="display: {{ 'block' if image_url else 'none' }};"
              src="{{ image_url if image_url else '' }}"
              alt="Preview Gambar">
-        <button type="submit">🔍 Prediksi Sekarang</button>
+             
+        <button type="submit" id="submit-button">🔍 Prediksi Sekarang</button>
     </form>
-    </center>
 
-{% if result %}
-    {% set conf_warna = result.confidence['warna'][result.fitur['warna']] %}
-    {% set conf_tekstur = result.confidence['tekstur'][result.fitur['tekstur']] %}
-    {% set conf_lokasi = result.confidence['lokasi'][result.fitur['lokasi']] %}
-    {% if result.luka == 'ya' %}
-    {% set conf_luka = result.confidence['luka']['luka'] %}
-{% elif 'tidak' in result.confidence['luka'] %}
-    {% set conf_luka = result.confidence['luka']['tidak'] %}
-{% else %}
-    {% set conf_luka = 0 %}
-{% endif %}
+    {% if error_message %}
+        <div class="error-box" id="error-box">
+            <h3>❌ Hasil Tidak Valid</h3>
+            <p>{{ error_message }}</p>
+        </div>
+    {% endif %}
 
-
-    {% set fitur_rendah = [] %}
-    {% if conf_warna < 60 %} {% set _ = fitur_rendah.append('warna (' ~ conf_warna ~ '%)') %} {% endif %}
-    {% if conf_tekstur < 60 %} {% set _ = fitur_rendah.append('tekstur (' ~ conf_tekstur ~ '%)') %} {% endif %}
-    {% if conf_lokasi < 60 %} {% set _ = fitur_rendah.append('lokasi (' ~ conf_lokasi ~ '%)') %} {% endif %}
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 4e4ab12 (update project)
-    {% if fitur_rendah|length == 0 %}
-        <div class="result-container">
+    {% if result %}
+        <div class="result-container" id="result-container">
             <div class="box">
                 <h3>🧬 Karakteristik Citra</h3>
-                <p>• Warna: {{ result.fitur['warna'] }} ({{ conf_warna }}%)</p>
-                <p>• Tekstur: {{ result.fitur['tekstur'] }} ({{ conf_tekstur }}%)</p>
-                <p>• Lokasi: {{ result.fitur['lokasi'] }} ({{ conf_lokasi }}%)</p>
-                <p>• Luka: {{ result.luka }} ({{ conf_luka }}%)</p>
+                <p>• Warna: <b>{{ result.fitur.warna | title }}</b> ({{ result.confidence.warna }}%)</p>
+                <p>• Tekstur: <b>{{ result.fitur.tekstur | title }}</b> ({{ result.confidence.tekstur }}%)</p>
+                <p>• Lokasi: <b>{{ result.fitur.lokasi | title }}</b> ({{ result.confidence.lokasi }}%)</p>
+                <p>• Luka: <b>{{ result.fitur.luka | title }}</b> ({{ result.confidence.luka }}%)</p>
             </div>
 
             <div class="box">
                 <h3>🩺 Hasil Prediksi</h3>
-                <p><strong>Penyakit: {{ result.diagnosis.upper() }}</strong></p>
+                <p>Penyakit: <strong>{{ result.diagnosis }}</strong></p>
             </div>
 
-            <div class="box">
+            <div class="box" style="border-left-color: #28a745;">
                 <h3>💡 Saran Penanganan</h3>
                 <ul>
                     {% for langkah in result.rekomendasi %}
@@ -126,14 +165,7 @@
                 </ul>
             </div>
         </div>
-    {% else %}
-        <div class="box" style="border-left: 5px solid red;">
-            <h3>❌ Hasil Tidak Valid</h3>
-            <p>Probabilitas terlalu rendah (Fitur {{ fitur_rendah | join(', ') }}).<br>
-            Silakan unggah gambar luka yang lebih jelas atau relevan dengan kasus.</p>
-        </div>
     {% endif %}
-{% endif %}
 
 </div>
 
@@ -150,6 +182,33 @@
             reader.readAsDataURL(file);
         }
     }
+
+    // --- LOADER DI TOMBOL ---
+    document.getElementById('prediction-form').addEventListener('submit', function() {
+        const imageInput = document.getElementById('imageInput');
+        const submitButton = document.getElementById('submit-button');
+        if (imageInput.files.length > 0) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="button-spinner"></span> Menganalisis...`;
+        }
+    });
+
+    // --- MENGHILANGKAN HASIL SAAT PILIH GAMBAR LAGI ---
+    document.getElementById('imageInput').addEventListener('click', function() {
+        // Cari kontainer hasil dan error berdasarkan ID yang ditambahkan
+        const resultContainer = document.getElementById('result-container');
+        const errorBox = document.getElementById('error-box');
+
+        // Jika kontainer hasil ada di halaman, sembunyikan
+        if (resultContainer) {
+            resultContainer.style.display = 'none';
+        }
+
+        // Jika kontainer error ada di halaman, sembunyikan juga
+        if (errorBox) {
+            errorBox.style.display = 'none';
+        }
+    });
 </script>
 </body>
 </html>

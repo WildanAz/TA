@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+.venv/
+*.sqlite3
+*.log
+*.h5
+*.hdf5
+*.csv
+*.zip
+*.tar.gz
+*.joblib
+*.pkl
+.DS_Store
